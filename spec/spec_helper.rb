@@ -13,6 +13,35 @@
 # The `.rspec` file also contains a few flags that are not defaults but that
 # users commonly want.
 #
+
+require 'delayed_job_active_record'
+
+Delayed::Worker.logger = Logger.new('/tmp/dj.log')
+ENV['RAILS_ENV'] = 'test'
+
+ActiveRecord::Base.establish_connection :adapter => 'sqlite3', :database => ':memory:'
+ActiveRecord::Base.logger = Delayed::Worker.logger
+ActiveRecord::Migration.verbose = false
+
+ActiveRecord::Schema.define do
+  create_table :delayed_jobs, :force => true do |t|
+    t.integer  :priority, :default => 0
+    t.integer  :attempts, :default => 0
+    t.text     :handler
+    t.text     :last_error
+    t.datetime :run_at
+    t.datetime :locked_at
+    t.datetime :failed_at
+    t.string   :locked_by
+    t.string   :queue
+    t.string   :cron
+    t.timestamps
+  end
+
+  add_index :delayed_jobs, [:priority, :run_at], :name => 'delayed_jobs_priority'
+end
+
+
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
 # The settings below are suggested to provide a good initial experience

@@ -2,11 +2,13 @@ require 'delayed_cron_job'
 
 describe DelayedCronJob do
   context 'with cron' do
+    it 'sets run_at on enqueue'
+    it 'schedules a new job after success'
+    it 'schedules a new job after failure'
+    it 'destroys the original job after a single failure'
+    it 'uses correct db time for next run'
     it 'increases attempts on each run'
     it 'is not stopped by max attempts'
-    it 'destroys the original job after a single failure'
-    it 'schedules a new job after failure'
-    it 'schedules a new job after success'
   end
 
   context 'without cron' do

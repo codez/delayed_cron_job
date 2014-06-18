@@ -12,11 +12,11 @@ module DelayedJob
     self.source_paths << File.join(File.dirname(__FILE__), 'templates')
 
     def create_migration_file
-      migration_template 'cron_migration.rb', 'db/migrate/add_cron_to_delayed_jobs.rb'
+      migration_template('cron_migration.rb', 'db/migrate/add_cron_to_delayed_jobs.rb')
     end
 
-    def self.next_migration_number dirname
-      ActiveRecord::Generators::Base.next_migration_number dirname
+    def self.next_migration_number(dirname)
+      ActiveRecord::Generators::Base.next_migration_number(dirname)
     end
   end
 end
