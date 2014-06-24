@@ -12,7 +12,6 @@ module DelayedCronJob
     end
 
     callbacks do |lifecycle|
-
       # Calculate the next run_at based on the cron attribute before enqueue.
       lifecycle.before(:enqueue) do |job|
         next_run_at(job) if cron?(job)
@@ -37,12 +36,13 @@ module DelayedCronJob
       lifecycle.after(:perform) do |worker, job|
         if cron?(job)
           next_job = job.dup
+          next_job.locked_at = nil
+          next_job.locked_by = nil
           next_job.attempts += 1
           next_run_at(next_job)
           next_job.save!
         end
       end
-
     end
 
   end

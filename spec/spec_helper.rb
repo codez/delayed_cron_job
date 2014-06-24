@@ -15,6 +15,8 @@
 #
 
 require 'delayed_job_active_record'
+require 'delayed_cron_job'
+require 'pry'
 
 Delayed::Worker.logger = Logger.new('/tmp/dj.log')
 ENV['RAILS_ENV'] = 'test'

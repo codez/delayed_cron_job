@@ -7,3 +7,5 @@ require 'delayed_cron_job/version'
 module DelayedCronJob
 
 end
+
+DelayedCronJob::Plugin.callback_block.call(Delayed::Worker.lifecycle)
