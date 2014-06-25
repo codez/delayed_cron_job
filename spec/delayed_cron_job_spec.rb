@@ -35,11 +35,12 @@ describe DelayedCronJob do
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.attempts).to eq(1)
+      expect(j.last_error).to eq(nil)
     end
 
     it 'schedules a new job after failure' do
       allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
-      job.update_column(:run_at, now)
+      job.update(run_at: now)
 
       worker.work_off
 
@@ -49,18 +50,86 @@ describe DelayedCronJob do
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.last_error).to match('Fail!')
-      expect(j.attempts).to eq(1)
     end
 
-    it 'schedules a new job after timeout'
-    it 'destroys the original job after a single failure'
-    it 'uses correct db time for next run'
-    it 'increases attempts on each run'
-    it 'is not stopped by max attempts'
+    it 'schedules a new job after timeout' do
+      Delayed::Worker.max_run_time = 1.second
+      job.update_column(:run_at, now)
+      allow_any_instance_of(TestJob).to receive(:perform) { sleep 2 }
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.id).not_to eq(job.id)
+      expect(j.cron).to eq(job.cron)
+      expect(j.run_at).to eq(next_run)
+      expect(j.attempts).to eq(1)
+      expect(j.last_error).to match("execution expired")
+    end
+
+    xit 'schedules no new job after deserialization error' do
+      Delayed::Worker.max_run_time = 1.second
+      job.update_column(:run_at, now)
+      allow_any_instance_of(TestJob).to receive(:perform).and_raise(Delayed::DeserializationError)
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(0)
+    end
+
+    it 'uses correct db time for next run' do
+      if Time.now != now
+        job = Delayed::Job.enqueue(handler, cron: '* * * * *')
+        run = now.hour == 23 && now.min == 59 ? now + 1.day : now
+        hour = now.min == 59 ? now.hour + 1 % 24 : now.hour
+        run_at = Time.utc(run.year, run.month, run.day, hour, now.min + 1 % 60)
+        expect(job.run_at).to eq(run_at)
+      else
+        pending "This test only makes sense in non-UTC time zone"
+      end
+    end
+
+    it 'increases attempts on each run' do
+      job.update(run_at: now, attempts: 3)
+
+      worker.work_off
+
+      j = Delayed::Job.first
+      expect(j.attempts).to eq(4)
+    end
+
+    it 'is not stopped by max attempts' do
+      job.update(run_at: now, attempts: Delayed::Worker.max_attempts + 1)
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.attempts).to eq(job.attempts + 1)
+    end
   end
 
   context 'without cron' do
-    it 'reschedules the original job after a single failure'
-    it 'does not reschedule a job after a run'
+    it 'reschedules the original job after a single failure' do
+      allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
+      job = Delayed::Job.enqueue(handler)
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.id).to eq(job.id)
+      expect(j.cron).to eq(nil)
+      expect(j.last_error).to match('Fail!')
+    end
+
+    it 'does not reschedule a job after a successful run' do
+      job = Delayed::Job.enqueue(handler)
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(0)
+    end
   end
 end
