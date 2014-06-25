@@ -31,7 +31,7 @@ describe DelayedCronJob do
 
       expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
-      expect(j.id).not_to eq(job.id)
+      expect(j.id).to eq(job.id)
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.attempts).to eq(1)
@@ -46,7 +46,7 @@ describe DelayedCronJob do
 
       expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
-      expect(j.id).not_to eq(job.id)
+      expect(j.id).to eq(job.id)
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.last_error).to match('Fail!')
@@ -61,21 +61,23 @@ describe DelayedCronJob do
 
       expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
-      expect(j.id).not_to eq(job.id)
+      expect(j.id).to eq(job.id)
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.attempts).to eq(1)
       expect(j.last_error).to match("execution expired")
     end
 
-    xit 'schedules no new job after deserialization error' do
+    it 'schedules new job after deserialization error' do
       Delayed::Worker.max_run_time = 1.second
       job.update_column(:run_at, now)
       allow_any_instance_of(TestJob).to receive(:perform).and_raise(Delayed::DeserializationError)
 
       worker.work_off
 
-      expect(Delayed::Job.count).to eq(0)
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.last_error).to match("Delayed::DeserializationError")
     end
 
     it 'uses correct db time for next run' do

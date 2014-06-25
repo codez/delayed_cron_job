@@ -36,6 +36,7 @@ module DelayedCronJob
       lifecycle.after(:perform) do |worker, job|
         if cron?(job)
           next_job = job.dup
+          next_job.id = job.id
           next_job.locked_at = nil
           next_job.locked_by = nil
           next_job.attempts += 1
