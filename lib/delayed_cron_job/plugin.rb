@@ -32,11 +32,19 @@ module DelayedCronJob
         end
       end
 
+      # Reset the last_error to have the correct status of the last run.
+      lifecycle.before(:perform) do |worker, job|
+        if cron?(job)
+          job.last_error = nil
+        end
+      end
+
       # Schedule the next run based on the cron attribute.
       lifecycle.after(:perform) do |worker, job|
         if cron?(job)
           next_job = job.dup
           next_job.id = job.id
+          next_job.created_at = job.created_at
           next_job.locked_at = nil
           next_job.locked_by = nil
           next_job.attempts += 1

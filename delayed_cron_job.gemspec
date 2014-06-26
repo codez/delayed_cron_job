@@ -8,9 +8,12 @@ Gem::Specification.new do |spec|
   spec.version       = DelayedCronJob::VERSION
   spec.authors       = ["Pascal Zumkehr"]
   spec.email         = ["spam@codez.ch"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
-  spec.homepage      = ""
+  spec.summary       = %q{An extension to Delayed::Job that allows you to set
+                          cron expressions for your jobs to run regularly.}
+  spec.description   = %q{Delayed Cron Job is an extension to Delayed::Job
+                          that allows you to set cron expressions for your
+                          jobs to run regularly.}
+  spec.homepage      = "https://github.com/codez/delayed_cron_job"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")

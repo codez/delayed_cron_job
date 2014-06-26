@@ -36,6 +36,7 @@ describe DelayedCronJob do
       expect(j.run_at).to eq(next_run)
       expect(j.attempts).to eq(1)
       expect(j.last_error).to eq(nil)
+      expect(j.created_at).to eq(job.created_at)
     end
 
     it 'schedules a new job after failure' do
@@ -50,6 +51,7 @@ describe DelayedCronJob do
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.last_error).to match('Fail!')
+      expect(j.created_at).to eq(job.created_at)
     end
 
     it 'schedules a new job after timeout' do
@@ -80,12 +82,33 @@ describe DelayedCronJob do
       expect(j.last_error).to match("Delayed::DeserializationError")
     end
 
+    it 'has empty last_error after success' do
+      job.update(run_at: now, last_error: 'Last error')
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.last_error).to eq(nil)
+    end
+
+    it 'has correct last_error after success' do
+      allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
+      job.update(run_at: now, last_error: 'Last error')
+
+      worker.work_off
+
+      expect(Delayed::Job.count).to eq(1)
+      j = Delayed::Job.first
+      expect(j.last_error).to match('Fail!')
+    end
+
     it 'uses correct db time for next run' do
       if Time.now != now
         job = Delayed::Job.enqueue(handler, cron: '* * * * *')
         run = now.hour == 23 && now.min == 59 ? now + 1.day : now
-        hour = now.min == 59 ? now.hour + 1 % 24 : now.hour
-        run_at = Time.utc(run.year, run.month, run.day, hour, now.min + 1 % 60)
+        hour = now.min == 59 ? (now.hour + 1) % 24 : now.hour
+        run_at = Time.utc(run.year, run.month, run.day, hour, (now.min + 1) % 60)
         expect(job.run_at).to eq(run_at)
       else
         pending "This test only makes sense in non-UTC time zone"
