@@ -24,6 +24,11 @@ describe DelayedCronJob do
       expect(job.run_at).to eq(next_run)
     end
 
+    it 'enqueue fails with invalid cron' do
+      expect { Delayed::Job.enqueue(handler, cron: 'no valid cron') }.
+        to raise_error(ArgumentError)
+    end
+
     it 'schedules a new job after success' do
       job.update_column(:run_at, now)
 
@@ -87,7 +92,6 @@ describe DelayedCronJob do
 
       worker.work_off
 
-      expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
       expect(j.last_error).to eq(nil)
     end
@@ -98,7 +102,6 @@ describe DelayedCronJob do
 
       worker.work_off
 
-      expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
       expect(j.last_error).to match('Fail!')
     end
