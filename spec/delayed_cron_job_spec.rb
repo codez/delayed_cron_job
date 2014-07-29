@@ -31,6 +31,7 @@ describe DelayedCronJob do
 
     it 'schedules a new job after success' do
       job.update_column(:run_at, now)
+      job.reload
 
       worker.work_off
 
@@ -47,6 +48,7 @@ describe DelayedCronJob do
     it 'schedules a new job after failure' do
       allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
       job.update(run_at: now)
+      job.reload
 
       worker.work_off
 
@@ -153,7 +155,7 @@ describe DelayedCronJob do
     end
 
     it 'does not reschedule a job after a successful run' do
-      job = Delayed::Job.enqueue(handler)
+      Delayed::Job.enqueue(handler)
 
       worker.work_off
 
