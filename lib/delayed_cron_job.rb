@@ -10,6 +10,11 @@ end
 
 if defined?(Delayed::Backend::Mongoid)
   Delayed::Backend::Mongoid::Job.field :cron, :type => String
+  Delayed::Backend::Mongoid::Job.attr_accessible(:cron) if Delayed::Backend::Mongoid::Job.respond_to?(:attr_accessible)
+end
+
+if defined?(Delayed::Backend::ActiveRecord) && Delayed::Backend::ActiveRecord::Job.respond_to?(:attr_accessible)
+  Delayed::Backend::ActiveRecord::Job.attr_accessible(:cron)
 end
 
 DelayedCronJob::Plugin.callback_block.call(Delayed::Worker.lifecycle)
