@@ -32,6 +32,29 @@ Any crontab compatible cron expressions are supported (see `man 5 crontab`).
 The credits for the `Cronline` class used go to
 [rufus-scheduler](https://github.com/jmettraux/rufus-scheduler).
 
+You can also pass a method name to the `cron` option, but your payload object
+must respond to this method (which receives the job as a parameter) and this 
+method must return a valid cron expression. This way, the interval doesn't 
+need to be fixed. You can, for example, run the job everyday on the first 
+10 days and then just run it once a week. For example:
+    
+    Delayed::Job.enqueue(MyRepeatedJob.new, cron: :cron_calculator)
+
+```ruby
+class MyRepeatedJob < Struct.new
+  def perform
+  end
+
+  def cron_calculator(job)
+    if job.attempts > 10
+      '0 0 * * 0'
+    else
+      '0 0 * * *'
+    end
+  end
+end
+```
+
 ## Details
 
 The initial `run_at` value is computed during the `#enqueue` method call.

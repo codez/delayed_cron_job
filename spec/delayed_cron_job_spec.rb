@@ -4,6 +4,10 @@ describe DelayedCronJob do
 
   class TestJob
     def perform; end
+
+    def cron_method(job)
+      job.attempts % 2 === 0 ? '0 0 1 2 *' : '0 0 1 1 *'
+    end
   end
 
   before { Delayed::Job.delete_all }
@@ -137,6 +141,20 @@ describe DelayedCronJob do
       expect(Delayed::Job.count).to eq(1)
       j = Delayed::Job.first
       expect(j.attempts).to eq(job.attempts + 1)
+    end
+
+    it 'can use dynamic cron' do
+      Delayed::Job.enqueue(handler, cron: :cron_method)
+
+      j = Delayed::Job.first
+      expect(j.run_at.month).to eq(2)
+
+      j.update(run_at: j.run_at.last_year)
+
+      worker.work_off
+
+      j = Delayed::Job.first
+      expect(j.run_at.month).to eq(1)
     end
   end
 
