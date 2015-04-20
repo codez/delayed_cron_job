@@ -3,7 +3,7 @@ module DelayedCronJob
 
     class << self
       def next_run_at(job)
-        cron = job.payload_object.respond_to?(job.cron) ? job.payload_object.send(job.cron, job) : job.cron
+        cron = job.payload_object.respond_to?(:run_next_at) ? job.payload_object.send(:run_next_at, job) : job.cron
         if cron.nil?
           job.cron = nil
         else
