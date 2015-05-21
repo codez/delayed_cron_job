@@ -17,7 +17,7 @@ If you are using `delayed_job_active_record`, generate a migration (after the
 original delayed job migration) to add the `cron` column to the `delayed_jobs`
 table:
 
-    $ rails generate delayed_jobs:cron
+    $ rails generate delayed_job:cron
     $ rake db:migrate
 
 There are no additional steps for `delayed_job_mongoid`.
