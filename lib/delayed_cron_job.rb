@@ -17,4 +17,4 @@ if defined?(Delayed::Backend::ActiveRecord) && Delayed::Backend::ActiveRecord::J
   Delayed::Backend::ActiveRecord::Job.attr_accessible(:cron)
 end
 
-DelayedCronJob::Plugin.callback_block.call(Delayed::Worker.lifecycle)
+Delayed::Worker.plugins << DelayedCronJob::Plugin

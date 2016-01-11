@@ -21,7 +21,7 @@ module DelayedCronJob
       # after perform.
       lifecycle.around(:error) do |worker, job, &block|
         if cron?(job)
-          job.last_error = "#{$ERROR_INFO.message}\n#{$ERROR_INFO.backtrace.join("\n")}"
+          job.error = $ERROR_INFO
           worker.job_say(job,
                          "FAILED with #{$ERROR_INFO.class.name}: #{$ERROR_INFO.message}",
                          Logger::ERROR)
