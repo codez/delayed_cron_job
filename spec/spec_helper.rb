@@ -15,10 +15,13 @@
 #
 
 require 'delayed_job_active_record'
+require 'active_job'
 require 'delayed_cron_job'
 
 Delayed::Worker.logger = Logger.new('/tmp/dj.log')
 ENV['RAILS_ENV'] = 'test'
+
+ActiveJob::Base.queue_adapter = :delayed_job
 
 ActiveRecord::Base.establish_connection :adapter => 'sqlite3', :database => ':memory:'
 ActiveRecord::Base.logger = Delayed::Worker.logger
@@ -45,5 +48,5 @@ end
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
-  
+
 end

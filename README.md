@@ -28,6 +28,10 @@ When enqueuing a job, simply pass the `cron` option, e.g.:
 
     Delayed::Job.enqueue(MyRepeatedJob.new, cron: '15 */6 * * 1-5')
 
+Or, when using Active Job:
+
+    MyJob.set(cron: '*/5 * * * *').perform_later
+
 Any crontab compatible cron expressions are supported (see `man 5 crontab`).
 The credits for the `Cronline` class used go to
 [rufus-scheduler](https://github.com/jmettraux/rufus-scheduler).

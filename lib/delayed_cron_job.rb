@@ -18,3 +18,16 @@ if defined?(Delayed::Backend::ActiveRecord) && Delayed::Backend::ActiveRecord::J
 end
 
 Delayed::Worker.plugins << DelayedCronJob::Plugin
+
+if defined?(::ActiveJob)
+  require 'delayed_cron_job/active_job/enqueuing'
+  require 'delayed_cron_job/active_job/queue_adapter'
+
+  ActiveJob::Base.send(:include, DelayedCronJob::ActiveJob::Enqueuing)
+  if ActiveJob::QueueAdapters::DelayedJobAdapter.respond_to?(:enqueue)
+    ActiveJob::QueueAdapters::DelayedJobAdapter.extend(DelayedCronJob::ActiveJob::QueueAdapter)
+  else
+    ActiveJob::QueueAdapters::DelayedJobAdapter.send(:include, DelayedCronJob::ActiveJob::QueueAdapter)
+  end
+
+end
