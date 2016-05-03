@@ -138,6 +138,39 @@ describe DelayedCronJob do
       j = Delayed::Job.first
       expect(j.attempts).to eq(job.attempts + 1)
     end
+
+    it 'can use dynamic cron' do
+      class TestJob
+        define_method(:run_next_at) do |job|
+          return nil if job.attempts > 10
+          job.attempts % 2 === 0 ? '0 0 1 2 *' : '0 0 1 1 *'
+        end
+      end
+
+      Delayed::Job.enqueue(handler, cron: '* * * * *')
+      j = Delayed::Job.first
+      j.update(run_at: j.run_at.last_year, attempts: 11)
+
+      worker.work_off
+    end
+
+    it 'ignores if cron is nil' do
+      class TestJob
+        define_method(:run_next_at) do |job|
+          return nil if job.attempts > 10
+          job.attempts % 2 === 0 ? '0 0 1 2 *' : '0 0 1 1 *'
+        end
+      end
+
+      Delayed::Job.enqueue(handler, cron: '* * * * *')
+
+      j = Delayed::Job.first
+      expect(j.run_at.month).to eq(2)
+
+      j.update(run_at: j.run_at.last_year)
+
+      worker.work_off
+    end 
   end
 
   context 'without cron' do
