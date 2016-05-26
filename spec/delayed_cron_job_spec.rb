@@ -31,7 +31,7 @@ describe DelayedCronJob do
 
     it 'schedules a new job after success' do
       job.update_column(:run_at, now)
-      job.reload
+      job.reload # adjusts granularity of run_at datetime
 
       worker.work_off
 
@@ -48,7 +48,7 @@ describe DelayedCronJob do
     it 'schedules a new job after failure' do
       allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
       job.update(run_at: now)
-      job.reload
+      job.reload # adjusts granularity of run_at datetime
 
       worker.work_off
 
@@ -98,7 +98,7 @@ describe DelayedCronJob do
       expect(j.last_error).to eq(nil)
     end
 
-    it 'has correct last_error after success' do
+    it 'has updated last_error after failure' do
       allow_any_instance_of(TestJob).to receive(:perform).and_raise('Fail!')
       job.update(run_at: now, last_error: 'Last error')
 
@@ -138,6 +138,36 @@ describe DelayedCronJob do
       j = Delayed::Job.first
       expect(j.attempts).to eq(job.attempts + 1)
     end
+
+    it 'updates run_at if cron is changed' do
+      job.update!(cron: '1 10 * * *')
+      expect(job.run_at.min).to eq(1)
+    end
+
+    it 'uses new cron when this is updated while job is running' do
+      job.update_column(:run_at, now)
+      allow_any_instance_of(TestJob).to receive(:perform) { job.update!(cron: '1 10 * * *') }
+
+      worker.work_off
+
+      j = Delayed::Job.first
+      expect(j.run_at.min).to eq(1)
+    end
+
+    it 'does not reschedule job if cron is cleared while job is running' do
+      job.update_column(:run_at, now)
+      allow_any_instance_of(TestJob).to receive(:perform) { job.update!(cron: '') }
+
+      expect { worker.work_off }.to change { Delayed::Job.count }.by(-1)
+    end
+
+    it 'does not reschedule job if model is deleted while job is running' do
+      job.update_column(:run_at, now)
+      allow_any_instance_of(TestJob).to receive(:perform) { job.destroy! }
+
+      expect { worker.work_off }.to change { Delayed::Job.count }.by(-1)
+    end
+
   end
 
   context 'without cron' do
