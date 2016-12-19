@@ -5,6 +5,14 @@ require 'delayed_cron_job/plugin'
 require 'delayed_cron_job/version'
 require 'delayed_cron_job/backend/updatable_cron'
 
+begin
+  require 'delayed_job_active_record'
+rescue LoadError; end
+
+begin
+  require 'delayed_job_mongoid'
+rescue LoadError; end
+
 module DelayedCronJob
 
 end
