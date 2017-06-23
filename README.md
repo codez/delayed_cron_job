@@ -5,7 +5,7 @@ cron expressions for your jobs to run repeatedly.
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add the following line to your application's Gemfile. Add it after the lines for all other `delayed_job*` gems so the gem can properly integrate with the Delayed::Job code.
 
     gem 'delayed_cron_job'
 
