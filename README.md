@@ -1,5 +1,7 @@
 # Delayed::Cron::Job
 
+{<img src="https://secure.travis-ci.org/codez/delayed_cron_job.png" />}[http://travis-ci.org/codez/delayed_cron_job]
+
 Delayed::Cron::Job is an extension to Delayed::Job that allows you to set
 cron expressions for your jobs to run repeatedly.
 
@@ -36,7 +38,7 @@ Any crontab compatible cron expressions are supported (see `man 5 crontab`).
 The credits for the `Cronline` class used go to
 [rufus-scheduler](https://github.com/jmettraux/rufus-scheduler).
 
-## Details
+## Details
 
 The initial `run_at` value is computed during the `#enqueue` method call.
 If you create `Delayed::Job` database entries directly, make sure to set
@@ -65,3 +67,8 @@ jobs.
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+## License
+
+Delayed::Cron::Job is released under the terms of the MIT License.
+Copyright 2014-2017 Pascal Zumkehr. See LICENSE for further information.
