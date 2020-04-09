@@ -28,11 +28,15 @@ There are no additional steps for `delayed_job_mongoid`.
 
 When enqueuing a job, simply pass the `cron` option, e.g.:
 
-    Delayed::Job.enqueue(MyRepeatedJob.new, cron: '15 */6 * * 1-5')
+```ruby
+Delayed::Job.enqueue(MyRepeatedJob.new, cron: '15 */6 * * 1-5')
+```
 
 Or, when using ActiveJob:
 
-    MyJob.set(cron: '*/5 * * * *').perform_later
+```ruby
+MyJob.set(cron: '*/5 * * * *').perform_later
+```
 
 Any crontab compatible cron expressions are supported (see `man 5 crontab`).
 The credits for the `Cronline` class used go to
