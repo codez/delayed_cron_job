@@ -38,7 +38,7 @@ Any crontab compatible cron expressions are supported (see `man 5 crontab`).
 The credits for the `Cronline` class used go to
 [rufus-scheduler](https://github.com/jmettraux/rufus-scheduler).
 
-## Semi-automatic Scheduling and Rails (6) tricks
+## Scheduling
 
 Usually, you want to schedule all existing cron jobs when deploying the
 application. Using a common super class makes this simple.
@@ -156,7 +156,7 @@ end
 ```
 
 Now, if you run `rails db:migrate`, `rails db:schema:load` or `rails
-db:schedule_jobs` all Jobs inheriting from `CronJob` are scheduled.
+db:schedule_jobs` all jobs inheriting from `CronJob` are scheduled.
 
 *If you are not using ActiveJob, the same approach may be used with minor
 adjustments.*
