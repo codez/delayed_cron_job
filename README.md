@@ -45,9 +45,9 @@ application. Using a common super class makes this simple.
 
 ### Custom CronJob superclass
 
-```ruby
-# app/jobs/cron_job.rb
+`app/jobs/cron_job.rb`:
 
+```ruby
 # Default configuration in `app/jobs/application_job.rb`, or subclass
 # ActiveJob::Base .
 class CronJob < ApplicationJob
@@ -83,8 +83,9 @@ end
 Then, an example job that triggers E-Mail-sending with default cron time at
 noon every day:
 
+`app/jobs/noon_job.rb`:
+
 ```ruby
-# app/jobs/noon_job.rb
 
 # Note that it inherits from `CronJob`
 NoonJob < CronJob
@@ -108,8 +109,9 @@ tasks:
 
 Define some helpers:
 
+`app/lib/scheduled_job_check.rb`:
+
 ```ruby
-# app/lib/scheduled_job_check.rb
 
 class ScheduledJobCheck
   def self.all_cron_job_classes
@@ -135,8 +137,9 @@ end
 
 And define a rake task and enhance `db:migrate` and `db:schema:load` to use it.
 
+`lib/tasks/jobs.rake`:
+
 ```ruby
-# lib/tasks/jobs.rake
 namespace :db do
   desc 'Schedule all cron jobs'
   task :schedule_jobs => :environment do
@@ -165,8 +168,9 @@ not all `CronJob`s are scheduled as expected, you can add the following snippets
 to your controller to show a flash if some schedule is missing. You can also
 expose a controller action to trigger `ScheduledJobCheck.schedule_all!` .
 
+`app/controller/admin_controller.rb`:
+
 ```ruby
-# app/controller/admin_controller.rb
 # ...
   def index
     if !ScheduledJobCheck.all_scheduled?
