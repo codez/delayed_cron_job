@@ -88,12 +88,12 @@ noon every day:
 ```ruby
 
 # Note that it inherits from `CronJob`
-NoonJob < CronJob
+class NoonJob < CronJob
   # set the (default) cron expression
-  self.cron_expression '0 5 * * *'
+  self.cron_expression '0 12 * * *'
 
   # will enqueue the mailing delivery job
-  def perform(*args)
+  def perform
     UserMailer.daily_notice(User.first).deliver_later
   end
 end
