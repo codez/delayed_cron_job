@@ -90,7 +90,7 @@ noon every day:
 # Note that it inherits from `CronJob`
 class NoonJob < CronJob
   # set the (default) cron expression
-  self.cron_expression '0 12 * * *'
+  self.cron_expression = '0 12 * * *'
 
   # will enqueue the mailing delivery job
   def perform
