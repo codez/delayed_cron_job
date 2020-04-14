@@ -114,10 +114,9 @@ namespace :db do
   desc 'Schedule all cron jobs'
   task :schedule_jobs => :environment do
     # Need to load all jobs definitions in order to find subclasses
-    # (or: understand Zeitwerk)
     glob = Rails.root.join('app', 'jobs', '**', '*_job.rb')
-    Dir.glob(glob).each {|file| require file}
-    CronJob.subclasses {|job| job.schedule}
+    Dir.glob(glob).each { |file| require file }
+    CronJob.subclasses.each { |job| job.schedule }
   end
 end
 
