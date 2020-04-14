@@ -107,43 +107,17 @@ cron jobs. If you do not want to do this manually (e.g. using `rails console`)
 or with your application logic, you can e.g. hook into the `rails db:*` rake
 tasks:
 
-Define some helpers:
-
-`app/lib/scheduled_job_check.rb`:
-
-```ruby
-
-class ScheduledJobCheck
-  def self.all_cron_job_classes
-    # Need to load all jobs definitions in order to find subclasses
-    # (or: understand Zeitwerk)
-    glob = Rails.root.join('app', 'jobs', '**', '*_job.rb')
-    Dir.glob(glob).each {|f| require f}
-    CronJob.subclasses
-  end
-
-  # true iff all CronJob descendents are present with an instance in the
-  # database
-  def self.all_scheduled?
-    all_cron_job_classes.all? { |job| job.scheduled? }
-  end
-
-  # schedule all CronJob descendents that are not already scheduled
-  def self.schedule_all!
-    all_cron_job_classes.each { |job| job.scheduled }
-  end
-end
-```
-
-And define a rake task and enhance `db:migrate` and `db:schema:load` to use it.
-
 `lib/tasks/jobs.rake`:
 
 ```ruby
 namespace :db do
   desc 'Schedule all cron jobs'
   task :schedule_jobs => :environment do
-    ScheduledJobCheck.schedule_all!
+    # Need to load all jobs definitions in order to find subclasses
+    # (or: understand Zeitwerk)
+    glob = Rails.root.join('app', 'jobs', '**', '*_job.rb')
+    Dir.glob(glob).each {|file| require file}
+    CronJob.subclasses {|job| job.schedule}
   end
 end
 
@@ -160,28 +134,6 @@ db:schedule_jobs` all jobs inheriting from `CronJob` are scheduled.
 
 *If you are not using ActiveJob, the same approach may be used with minor
 adjustments.*
-
-### Cheap "health"-display of schedules
-
-If you have an admin controller or some place where you want to show whether or
-not all `CronJob`s are scheduled as expected, you can add the following snippets
-to your controller to show a flash if some schedule is missing. You can also
-expose a controller action to trigger `ScheduledJobCheck.schedule_all!` .
-
-`app/controller/admin_controller.rb`:
-
-```ruby
-# ...
-  def index
-    if !ScheduledJobCheck.all_scheduled?
-      flash.now[:error] = t('.problem_not_all_jobs_scheduled')
-    end
-    # ... whatever AdminController does, e.g.
-    @jobs = Delayed::Job.all
-    # ...
-  end
-# ...
-```
 
 ### Changing the schedule
 
