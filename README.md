@@ -45,12 +45,16 @@ The credits for the `Cronline` class used go to
 ## Scheduling
 
 Usually, you want to schedule all existing cron jobs when deploying the
-application. Using a common super class makes this simple:
+application. Using a common super class makes this simple.
+
+### Custom CronJob superclass
 
 `app/jobs/cron_job.rb`:
 
 ```ruby
-class CronJob < ActiveJob::Base
+# Default configuration in `app/jobs/application_job.rb`, or subclass
+# ActiveJob::Base .
+class CronJob < ApplicationJob
 
   class_attribute :cron_expression
 
@@ -78,14 +82,44 @@ class CronJob < ActiveJob::Base
 end
 ```
 
+### Example Job inheriting from CronJob
+
+Then, an example job that triggers E-Mail-sending with default cron time at
+noon every day:
+
+`app/jobs/noon_job.rb`:
+
+```ruby
+
+# Note that it inherits from `CronJob`
+class NoonJob < CronJob
+  # set the (default) cron expression
+  self.cron_expression = '0 12 * * *'
+
+  # will enqueue the mailing delivery job
+  def perform
+    UserMailer.daily_notice(User.first).deliver_later
+  end
+end
+```
+
+### Scheduling "trigger"
+
+Jobs with a `cron` definition are rescheduled automatically only when a job
+instance finished its work. So there needs to be an initial scheduling of all
+cron jobs. If you do not want to do this manually (e.g. using `rails console`)
+or with your application logic, you can e.g. hook into the `rails db:*` rake
+tasks:
+
 `lib/tasks/jobs.rake`:
 
 ```ruby
 namespace :db do
   desc 'Schedule all cron jobs'
   task :schedule_jobs => :environment do
+    # Need to load all jobs definitions in order to find subclasses
     glob = Rails.root.join('app', 'jobs', '**', '*_job.rb')
-    Dir.glob(glob).each { |f| require f }
+    Dir.glob(glob).each { |file| require file }
     CronJob.subclasses.each { |job| job.schedule }
   end
 end
@@ -98,8 +132,18 @@ end
 end
 ```
 
-If you are not using ActiveJob, the same approach may be used with minor
-adjustments.
+Now, if you run `rails db:migrate`, `rails db:schema:load` or `rails
+db:schedule_jobs` all jobs inheriting from `CronJob` are scheduled.
+
+*If you are not using ActiveJob, the same approach may be used with minor
+adjustments.*
+
+### Changing the schedule
+
+Note that if you have a CronJob scheduled and change its `cron_expression` in
+its source file, you will have to remove any scheduled instances of the Job and
+reschedule it (e.g. with the snippet above: `rails db:migrate`). This is because
+the `cron_expression` is already persisted in the database (as `cron`).
 
 ## Details
 
