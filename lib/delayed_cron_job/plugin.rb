@@ -31,23 +31,18 @@ module DelayedCronJob
         end
       end
 
+      # Wrap the job in a proxy that will intercept destroy and reschedule the job record, instead.
+      lifecycle.around(:perform) do |worker, job, &block|
+        if cron?(job)
+          block.binding.local_variable_set(:job, DelayedCronJob::Backend::CronJobProxy.new(job))
+        end
+        block.call
+      end
+
       # Update the cron expression from the database in case it was updated.
       lifecycle.after(:invoke_job) do |job|
         if cron?(job)
           job.cron = job.class.where(:id => job.id).pluck(:cron).first
-        end
-      end
-
-      # Schedule the next run based on the cron attribute.
-      lifecycle.after(:perform) do |worker, job|
-        if cron?(job)
-          next_job = job.dup
-          next_job.id = job.id
-          next_job.created_at = job.created_at
-          next_job.locked_at = nil
-          next_job.locked_by = nil
-          next_job.attempts += 1
-          next_job.save!
         end
       end
     end

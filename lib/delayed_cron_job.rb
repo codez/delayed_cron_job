@@ -4,6 +4,7 @@ require 'delayed_cron_job/cronline'
 require 'delayed_cron_job/plugin'
 require 'delayed_cron_job/version'
 require 'delayed_cron_job/backend/updatable_cron'
+require 'delayed_cron_job/backend/cron_job_proxy'
 
 begin
   require 'delayed_job_active_record'
