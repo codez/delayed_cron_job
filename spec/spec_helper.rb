@@ -23,7 +23,7 @@ ENV['RAILS_ENV'] = 'test'
 
 ActiveJob::Base.queue_adapter = :delayed_job
 
-ActiveRecord::Base.establish_connection :adapter => 'sqlite3', :database => ':memory:'
+ActiveRecord::Base.establish_connection :adapter => 'sqlite3', :database => 'file::memory:?cache=shared'
 ActiveRecord::Base.logger = Delayed::Worker.logger
 ActiveRecord::Migration.verbose = false
 

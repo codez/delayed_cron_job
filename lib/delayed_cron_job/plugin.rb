@@ -10,7 +10,7 @@ module DelayedCronJob
     callbacks do |lifecycle|
 
       # Prevent rescheduling of failed jobs as this is already done
-      # after perform.
+      # when attempted to be destroyed.
       lifecycle.around(:error) do |worker, job, &block|
         if cron?(job)
           job.error = $ERROR_INFO

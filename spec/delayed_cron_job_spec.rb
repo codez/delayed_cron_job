@@ -6,6 +6,16 @@ describe DelayedCronJob do
     def perform; end
   end
 
+  class DatabaseDisconnectPlugin < Delayed::Plugin
+
+    callbacks do |lifecycle|
+      lifecycle.after(:perform) do
+        ActiveRecord::Base.connection.disconnect!
+      end
+    end
+
+  end
+
   before { Delayed::Job.delete_all }
 
   let(:cron)    { '5 1 * * *' }
@@ -168,6 +178,38 @@ describe DelayedCronJob do
       expect { worker.work_off }.to change { Delayed::Job.count }.by(-1)
     end
 
+    context 'when database connection is lost' do
+      around(:each) do |example|
+        Delayed::Worker.plugins.unshift DatabaseDisconnectPlugin
+        # hold onto a connection so the in-memory database isn't lost when disconnected
+        temp_connection = ActiveRecord::Base.connection_pool.checkout
+        example.run
+        ActiveRecord::Base.connection_pool.checkin temp_connection
+        Delayed::Worker.plugins.delete DatabaseDisconnectPlugin
+      end
+
+      it 'does not lose the job if database connection is lost' do
+        job.update_column(:run_at, now)
+        job.reload # adjusts granularity of run_at datetime
+
+        begin
+          worker.work_off
+        rescue
+          # Attempting to save the clone delayed_job will raise an exception due to the database connection being closed
+        end
+
+        ActiveRecord::Base.connection.reconnect!
+
+        expect(Delayed::Job.count).to eq(1)
+        j = Delayed::Job.first
+        expect(j.id).to eq(job.id)
+        expect(j.cron).to eq(job.cron)
+        expect(j.run_at).to eq(next_run)
+        expect(j.attempts).to eq(1)
+        expect(j.last_error).to eq(nil)
+        expect(j.created_at).to eq(job.created_at)
+      end
+    end
   end
 
   context 'without cron' do
