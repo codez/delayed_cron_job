@@ -6,6 +6,16 @@ describe DelayedCronJob do
     def perform; end
   end
 
+  class DatabaseDisconnectPlugin < Delayed::Plugin
+
+    callbacks do |lifecycle|
+      lifecycle.after(:perform) do
+        ActiveRecord::Base.connection.disconnect!
+      end
+    end
+
+  end
+
   before { Delayed::Job.delete_all }
 
   let(:cron)    { '5 1 * * *' }
@@ -25,8 +35,8 @@ describe DelayedCronJob do
     end
 
     it 'enqueue fails with invalid cron' do
-      expect { Delayed::Job.enqueue(handler, cron: 'no valid cron') }.
-        to raise_error(ArgumentError)
+      expect { Delayed::Job.enqueue(handler, cron: 'no valid cron') }
+        .to raise_error(ArgumentError)
     end
 
     it 'schedules a new job after success' do
@@ -74,19 +84,16 @@ describe DelayedCronJob do
       expect(j.cron).to eq(job.cron)
       expect(j.run_at).to eq(next_run)
       expect(j.attempts).to eq(1)
-      expect(j.last_error).to match("execution expired")
+      expect(j.last_error).to match('execution expired')
     end
 
-    it 'schedules new job after deserialization error' do
-      Delayed::Worker.max_run_time = 1.second
+    it 'does not schedule new job after deserialization error' do
       job.update_column(:run_at, now)
       allow_any_instance_of(TestJob).to receive(:perform).and_raise(Delayed::DeserializationError)
 
       worker.work_off
 
-      expect(Delayed::Job.count).to eq(1)
-      j = Delayed::Job.first
-      expect(j.last_error).to match("Delayed::DeserializationError")
+      expect(Delayed::Job.count).to eq(0)
     end
 
     it 'has empty last_error after success' do
@@ -116,7 +123,7 @@ describe DelayedCronJob do
         run_at = Time.utc(run.year, run.month, run.day, hour, (now.min + 1) % 60)
         expect(job.run_at).to eq(run_at)
       else
-        pending "This test only makes sense in non-UTC time zone"
+        pending 'This test only makes sense in non-UTC time zone'
       end
     end
 
@@ -168,6 +175,35 @@ describe DelayedCronJob do
       expect { worker.work_off }.to change { Delayed::Job.count }.by(-1)
     end
 
+    context 'when database connection is lost' do
+      around(:each) do |example|
+        Delayed::Worker.plugins.unshift DatabaseDisconnectPlugin
+        # hold onto a connection so the in-memory database isn't lost when disconnected
+        temp_connection = ActiveRecord::Base.connection_pool.checkout
+        example.run
+        ActiveRecord::Base.connection_pool.checkin temp_connection
+        Delayed::Worker.plugins.delete DatabaseDisconnectPlugin
+      end
+
+      it 'does not lose the job if database connection is lost' do
+        job.update_column(:run_at, now)
+        job.reload # adjusts granularity of run_at datetime
+
+        begin
+          worker.work_off
+        rescue StandardError
+          # Attempting to save the clone delayed_job will raise an exception due to the database connection being closed
+        end
+
+        ActiveRecord::Base.connection.reconnect!
+
+        expect(Delayed::Job.count).to eq(1)
+        j = Delayed::Job.first
+        expect(j.id).to eq(job.id)
+        expect(j.cron).to eq(job.cron)
+        expect(j.attempts).to eq(0)
+      end
+    end
   end
 
   context 'without cron' do
