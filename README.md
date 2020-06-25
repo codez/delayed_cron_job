@@ -178,5 +178,5 @@ jobs.
 ## License
 
 Delayed::Cron::Job is released under the terms of the MIT License.
-Copyright 2014-2019 Pascal Zumkehr. See [LICENSE](LICENSE) for further
+Copyright 2014-2020 Pascal Zumkehr. See [LICENSE](LICENSE) for further
 information.
