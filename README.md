@@ -120,7 +120,7 @@ namespace :db do
     # Need to load all jobs definitions in order to find subclasses
     glob = Rails.root.join('app', 'jobs', '**', '*_job.rb')
     Dir.glob(glob).each { |file| require file }
-    CronJob.subclasses.each { |job| job.schedule }
+    CronJob.subclasses.each(&:schedule)
   end
 end
 
