@@ -25,7 +25,7 @@ describe DelayedCronJob do
   let(:now)     { Delayed::Job.db_time_now }
   let(:next_run) do
     run = now.hour * 60 + now.min >= 65 ? now + 1.day : now
-    Time.utc(run.year, run.month, run.day, 1, 5)
+    Time.zone.local(run.year, run.month, run.day, 1, 5)
   end
 
   context 'with cron' do
@@ -116,14 +116,20 @@ describe DelayedCronJob do
     end
 
     it 'uses correct db time for next run' do
-      if Time.now != now
-        job = Delayed::Job.enqueue(handler, cron: '* * * * *')
-        run = now.hour == 23 && now.min == 59 ? now + 1.day : now
-        hour = now.min == 59 ? (now.hour + 1) % 24 : now.hour
-        run_at = Time.utc(run.year, run.month, run.day, hour, (now.min + 1) % 60)
-        expect(job.run_at).to eq(run_at)
-      else
-        pending 'This test only makes sense in non-UTC time zone'
+      local_zone = Time.zone
+      begin
+        Time.zone = nil
+        if Time.now != now
+          job = Delayed::Job.enqueue(handler, cron: '* * * * *')
+          run = now.hour == 23 && now.min == 59 ? now + 1.day : now
+          hour = now.min == 59 ? (now.hour + 1) % 24 : now.hour
+          run_at = Time.utc(run.year, run.month, run.day, hour, (now.min + 1) % 60)
+          expect(job.run_at).to eq(run_at)
+        else
+          pending 'This test only makes sense in non-UTC time zone'
+        end
+      ensure
+        Time.zone = local_zone
       end
     end
 

@@ -1,6 +1,6 @@
 require 'delayed_job'
 require 'English'
-require 'delayed_cron_job/cronline'
+require 'fugit'
 require 'delayed_cron_job/plugin'
 require 'delayed_cron_job/version'
 require 'delayed_cron_job/backend/updatable_cron'

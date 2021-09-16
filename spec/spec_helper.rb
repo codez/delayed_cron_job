@@ -21,6 +21,8 @@ require 'delayed_cron_job'
 Delayed::Worker.logger = Logger.new('/tmp/dj.log')
 ENV['RAILS_ENV'] = 'test'
 
+Time.zone = EtOrbi.get_tzone(:local)
+
 ActiveJob::Base.queue_adapter = :delayed_job
 
 ActiveRecord::Base.establish_connection :adapter => 'sqlite3', :database => 'file::memory:?cache=shared'

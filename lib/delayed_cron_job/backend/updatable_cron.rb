@@ -9,7 +9,8 @@ module DelayedCronJob
 
       def set_next_run_at
         if cron.present?
-          self.run_at = Cronline.new(cron).next_time(Delayed::Job.db_time_now)
+          now = Delayed::Job.db_time_now
+          self.run_at = Fugit::Cron.do_parse(cron).next_time(now).to_local_time
         end
       end
 

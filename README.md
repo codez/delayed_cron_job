@@ -39,8 +39,7 @@ MyJob.set(cron: '*/5 * * * *').perform_later
 ```
 
 Any crontab compatible cron expressions are supported (see `man 5 crontab`).
-The credits for the `Cronline` class used go to
-[rufus-scheduler](https://github.com/jmettraux/rufus-scheduler).
+Cron parsing is handled by [Fugit](https://github.com/floraison/fugit).
 
 ## Scheduling
 
@@ -178,5 +177,5 @@ jobs.
 ## License
 
 Delayed::Cron::Job is released under the terms of the MIT License.
-Copyright 2014-2020 Pascal Zumkehr. See [LICENSE](LICENSE) for further
+Copyright 2014-2021 Pascal Zumkehr. See [LICENSE](LICENSE) for further
 information.
