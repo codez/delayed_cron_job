@@ -1,6 +1,6 @@
 # Delayed::Cron::Job
 
-[![Build Status](https://travis-ci.org/codez/delayed_cron_job.svg)](https://travis-ci.org/codez/delayed_cron_job)
+[![Build Status](https://app.travis-ci.com/codez/delayed_cron_job.svg?branch=master)](https://app.travis-ci.com/codez/delayed_cron_job)
 
 Delayed::Cron::Job is an extension to Delayed::Job that allows you to set
 cron expressions for your jobs to run repeatedly.
@@ -102,7 +102,7 @@ class NoonJob < CronJob
 end
 ```
 
-### Scheduling "trigger"
+### Automatic Scheduling after db:migrate
 
 Jobs with a `cron` definition are rescheduled automatically only when a job
 instance finished its work. So there needs to be an initial scheduling of all
