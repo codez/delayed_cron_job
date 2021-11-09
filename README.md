@@ -1,6 +1,7 @@
 # Delayed::Cron::Job
 
-[![Build Status](https://app.travis-ci.com/codez/delayed_cron_job.svg?branch=master)](https://app.travis-ci.com/codez/delayed_cron_job)
+[![Build Status](https://github.com/codez/delayed_cron_job/actions/workflows/build.yml/badge.svg)](https://github.com/codez/delayed_cron_job/actions/workflows/build.yml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/f0e6a84791b379b63127/maintainability)](https://codeclimate.com/github/codez/delayed_cron_job/maintainability)
 
 Delayed::Cron::Job is an extension to Delayed::Job that allows you to set
 cron expressions for your jobs to run repeatedly.
