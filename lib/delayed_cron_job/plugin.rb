@@ -16,7 +16,7 @@ module DelayedCronJob
           job.error = $ERROR_INFO
           worker.job_say(job,
                          "FAILED with #{$ERROR_INFO.class.name}: #{$ERROR_INFO.message}",
-                         Logger::ERROR)
+                         "error")
         else
           # No cron job - proceed as normal
           block.call(worker, job)
