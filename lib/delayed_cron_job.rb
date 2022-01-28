@@ -23,17 +23,12 @@ if defined?(Delayed::Backend::Mongoid)
   Delayed::Backend::Mongoid::Job.send(:include, DelayedCronJob::Backend::UpdatableCron)
 end
 
-if defined?(Delayed::Backend::ActiveRecord)
-  if defined?(Rails::Railtie)
-    # Postpone initialization to railtie for correct order
-    require 'delayed_cron_job/backend/active_record/railtie'
-  else
-    # Do the same as in the railtie
-    Delayed::Backend::ActiveRecord::Job.send(:include, DelayedCronJob::Backend::UpdatableCron)
-    if Delayed::Backend::ActiveRecord::Job.respond_to?(:attr_accessible)
-      Delayed::Backend::ActiveRecord::Job.attr_accessible(:cron)
-    end
-  end
+if defined?(Rails::Railtie)
+  # Postpone initialization to railtie for correct order
+  require 'delayed_cron_job/backend/active_record/railtie'
+else
+  # Do the same as in the railtie
+  Delayed::Job.include(DelayedCronJob::Backend::UpdatableCron)
 end
 
 Delayed::Worker.plugins << DelayedCronJob::Plugin
