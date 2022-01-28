@@ -8,12 +8,17 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test ${{ matrix.ruby-version }} / ${{ matrix.gemfile }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        gemfile: [Gemfile, delayed.gemfile]
         ruby-version: ['2.5', '2.6', '2.7', '3.0']
-
+        exclude:
+        - gemfile: delayed.gemfile
+          ruby-version: '2.5'
+    env:
+      BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
