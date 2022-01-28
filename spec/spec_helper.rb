@@ -18,6 +18,7 @@ require 'delayed_job_active_record'
 require 'active_job'
 require 'delayed_cron_job'
 
+Delayed::Worker.destroy_failed_jobs = true
 Delayed::Worker.logger = Logger.new('/tmp/dj.log')
 ENV['RAILS_ENV'] = 'test'
 
