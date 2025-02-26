@@ -75,6 +75,7 @@ class CronJob < ApplicationJob
     def delayed_job
       Delayed::Job
         .where('handler LIKE ?', "%job_class: #{name}%")
+        .where(last_error: nil)
         .first
     end
 
