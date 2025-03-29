@@ -6,16 +6,6 @@ describe DelayedCronJob do
     def perform; end
   end
 
-  class DatabaseDisconnectPlugin < Delayed::Plugin
-
-    callbacks do |lifecycle|
-      lifecycle.after(:perform) do
-        ActiveRecord::Base.connection.disconnect!
-      end
-    end
-
-  end
-
   before { Delayed::Job.delete_all }
 
   let(:cron)    { '5 1 * * *' }
@@ -182,11 +172,25 @@ describe DelayedCronJob do
     end
 
     context 'when database connection is lost' do
+
+      class DatabaseDisconnectPlugin < Delayed::Plugin
+        callbacks do |lifecycle|
+          lifecycle.after(:perform) do
+
+            pp ActiveRecord::Base.connection_pool.connections
+            ActiveRecord::Base.connection.disconnect!
+          end
+        end
+      end
+
       around(:each) do |example|
         Delayed::Worker.plugins.unshift DatabaseDisconnectPlugin
         # hold onto a connection so the in-memory database isn't lost when disconnected
         temp_connection = ActiveRecord::Base.connection_pool.checkout
+        temp_connection.connect!
+
         example.run
+
         ActiveRecord::Base.connection_pool.checkin temp_connection
         Delayed::Worker.plugins.delete DatabaseDisconnectPlugin
       end
